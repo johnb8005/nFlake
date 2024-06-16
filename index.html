@@ -1,0 +1,147 @@
+<html>
+  <head>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      svg {
+        width: 100%;
+        height: 90%;
+        display: block;
+      }
+      #controls {
+        width: 100%;
+        height: 10%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #controls label,
+      #controls input {
+        margin: 0 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <label for="nPointsSlider">Number of Points: </label>
+      <input type="range" id="nPointsSlider" min="3" max="12" value="6" />
+      <span id="nPointsValue">6</span>
+      <label for="maxIterationsInput">Max Iterations: </label>
+      <input
+        type="number"
+        id="maxIterationsInput"
+        min="1000"
+        max="100000"
+        value="20000" />
+      <a
+        href="https://en.wikipedia.org/wiki/N-flake"
+        target="_blank"
+        style="margin-left: 10px"
+        >Learn about N-flake</a
+      >
+    </div>
+    <svg id="svg-container" viewBox="-120 -120 240 240">​</svg>
+    <script>
+      class Point {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+        }
+
+        getDistance = (p) => {
+          const dx = p.x - this.x;
+          const dy = p.y - this.y;
+
+          return Math.sqrt(Math.pow(dy, 2) + Math.pow(dx, 2));
+        };
+
+        draw = (svgContainer, color = "red") => {
+          var circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          circle.setAttributeNS(null, "cx", this.x);
+          circle.setAttributeNS(null, "cy", this.y);
+          circle.setAttributeNS(null, "r", 0.3);
+          circle.setAttributeNS(null, "style", "fill: " + color + "; ");
+          // console.log("cirlce", circle);
+          svgContainer.appendChild(circle);
+        };
+
+        getNewPoint = (p, ratio = 2 / 3) => {
+          const x = this.x + ratio * (p.x - this.x);
+          const y = this.y + ratio * (p.y - this.y);
+
+          return new Point(x, y);
+        };
+      }
+
+      const svgContainer = document.getElementById("svg-container");
+      const nPointsSlider = document.getElementById("nPointsSlider");
+      const nPointsValue = document.getElementById("nPointsValue");
+
+      const r = 100;
+      const nPoints = 12;
+
+      // Function to generate a color gradient
+      function getColor(iteration, maxIterations) {
+        const hue = (iteration / maxIterations) * 360;
+        return `hsl(${hue}, 100%, 50%)`;
+      }
+
+      function drawFractal(nPoints, maxIterations) {
+        svgContainer.innerHTML = "";
+
+        // Starting point inside the hexagon
+        let currentPoint = new Point(0, 0);
+        currentPoint.draw(svgContainer, "green");
+
+        const angDelta = (Math.PI * 2) / nPoints;
+
+        const points = [];
+
+        let i = 0;
+        while (i < nPoints) {
+          points[i] = new Point(
+            r * Math.cos(angDelta * i),
+            r * Math.sin(angDelta * i)
+          );
+
+          // points[i].draw(svgContainer);
+
+          i += 1;
+        }
+
+        // Perform random walk
+        for (let i = 0; i < maxIterations; i++) {
+          const diceResult = Math.floor(Math.random() * nPoints);
+          currentPoint = currentPoint.getNewPoint(points[diceResult]);
+          const color = getColor(i, maxIterations);
+          currentPoint.draw(svgContainer, color);
+        }
+      }
+
+      function updateFractal() {
+        const nPoints = nPointsSlider.value;
+        const maxIterations = maxIterationsInput.value;
+        nPointsValue.textContent = nPoints;
+        drawFractal(nPoints, maxIterations);
+      }
+
+      nPointsSlider.addEventListener("input", updateFractal);
+
+      maxIterationsInput.addEventListener("input", updateFractal);
+
+      drawFractal(nPointsSlider.value, maxIterationsInput.value);
+    </script>
+  </body>
+</html>
